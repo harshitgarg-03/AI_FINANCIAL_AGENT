@@ -9,8 +9,10 @@ def fetch_user_transactions(user_id: str):
         FROM "Transaction"
         WHERE userId = :user_id
         ORDER BY date DESC
-    """),
-    {"userId": user_id}
+    """)
+    # {"userId": user_id}
+
+    print(type(query))
 
     with engine.connect() as conn:
 
