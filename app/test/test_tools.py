@@ -64,3 +64,19 @@
 
 
 # -----------------------------------------------------------------------------------
+
+
+from app.agent.financial_agent import (
+    FinancialAgent
+)
+
+agent = FinancialAgent()
+
+response = agent.chat(
+    user_id="K96x7m4yUck5Z0hDCLxdQ5oYjtpm2cez",
+    question="How can I save more money?"
+)
+
+print(response)
+
+# ----------------------------------------------------------------------------------
