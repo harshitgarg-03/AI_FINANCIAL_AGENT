@@ -179,10 +179,8 @@ class ExpenseAnalyzer:
         monthly = defaultdict(float)
 
         for tx in expenses:
-
-            date_obj = datetime.fromisoformat(
-                tx["date"]
-            )
+            date_obj = tx["date"]
+            
 
             month_key = (
                 f"{date_obj.year}-{date_obj.month:02d}"
