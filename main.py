@@ -12,3 +12,9 @@ app = FastAPI();
 @app.get("/")
 def Home():
     return {"message": "AI Financial Advisor "}
+
+# from sqlalchemy import text
+
+# with engine.connect() as conn:
+#     result = conn.execute(text("SELECT 1"))
+#     print(result.fetchone())
