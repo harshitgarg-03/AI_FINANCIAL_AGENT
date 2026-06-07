@@ -5,8 +5,8 @@ from datetime import datetime
 
 class ExpenseAnalyzer:
 
-    def __init__(self, transactions: list):
-        self.transactions = transactions
+    def __init__(self, transactions: list ):
+        self.transactions = transactions;
 
     # ---------------------------
     # EXPENSE TRANSACTIONS ONLY
