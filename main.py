@@ -6,12 +6,26 @@
 #     main()
 
 
-from fastapi import FastAPI
+# from fastapi import FastAPI
 
-app = FastAPI();
-@app.get("/")
-def Home():
-    return {"message": "AI Financial Advisor "}
+# app = FastAPI();
+# @app.get("/")
+# def Home():
+#     return {"message": "AI Financial Advisor "}
+
+
+from app.agent.financial_agent import (
+    FinancialAgent
+)
+
+agent = FinancialAgent()
+
+response = agent.chat(
+    user_id="ueP0HbKzLAwueZKwHV5QpSJb20DpBq1X",
+    question="Where am I spending most of my money?"
+)
+
+print(response)
 
 # from sqlalchemy import text
 
