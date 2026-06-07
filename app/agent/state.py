@@ -7,6 +7,8 @@ class FinancialState(TypedDict):
 
     question: str
 
+    preferences: dict
+    
     transactions: list
 
     summary: dict
