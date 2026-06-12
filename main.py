@@ -21,8 +21,8 @@ from app.agent.financial_agent import (
 agent = FinancialAgent()
 response = agent.chat(
     user_id="yibmylMlF2uFIBaZD0Wuyr2aDsEsNNMW",
-    question="give all transaction sumamry",
-    thread_id = "test2"
+    question="maine kon sa question pocha tha phle ",
+    thread_id = "test3"
 )
 
 print(response)
