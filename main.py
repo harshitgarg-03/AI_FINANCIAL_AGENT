@@ -19,10 +19,10 @@ from app.agent.financial_agent import (
 )
 
 agent = FinancialAgent()
-
 response = agent.chat(
-    user_id="ueP0HbKzLAwueZKwHV5QpSJb20DpBq1X",
-    question="Where am I spending most of my money?"
+    user_id="yibmylMlF2uFIBaZD0Wuyr2aDsEsNNMW",
+    question="give all transaction sumamry",
+    thread_id = "test2"
 )
 
 print(response)

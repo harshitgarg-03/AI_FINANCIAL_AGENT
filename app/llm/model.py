@@ -7,11 +7,11 @@ load_dotenv();
 groq_api = os.getenv("GROQ_API_KEY")
 
 llm=ChatGroq(
-    model="llama-3.3-70b-versatile"
+    model="qwen/qwen3-32b"
 )
 
-response=llm.invoke(
-    "hello"
-)
-
-print(response.content)
+# response=llm.invoke(
+#     "hello"
+# )
+# 
+# print(response.content)

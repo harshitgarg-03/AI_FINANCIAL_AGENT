@@ -11,4 +11,6 @@ def get_user_goals(user_id: str):
     Fetch financial goals.
     """
 
-    return fetch_user_transactions(user_id)
+    data = fetch_user_transactions(user_id)
+    print("user goals :: ",data)
+    return str(data)

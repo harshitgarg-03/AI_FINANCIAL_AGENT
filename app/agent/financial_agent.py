@@ -1,119 +1,93 @@
 from app.llm.model import llm
-
-from app.tools.expense_tools import (
-    get_user_transactions
-)
-
-from app.tools.budget_tools import (
-    get_user_budget
-)
-
-from app.tools.income_tools import (
-    get_user_income
-)
-
-from app.tools.goal_tools import (
-    get_user_goals
-)
-
-from app.services.analyzer import (
-    ExpenseAnalyzer
-)
-
 from app.tools.registry import TOOLS
 
 from langchain.agents import create_agent
+from langgraph.checkpoint.postgres import PostgresSaver 
+from langchain.agents.middleware.types import AgentMiddleware
+from langchain_core.messages import ToolMessage
+
+# from app.db.postgres import Checkpointer
+
+
+class GroqMessageSanitizerMiddleware(AgentMiddleware):
+    def wrap_model_call(self, request, handler):
+        cleaned_messages = []
+        for msg in request.messages:
+            if isinstance(msg, ToolMessage):
+                content = msg.content
+                if content is None:
+                    msg = msg.model_copy(update={"content": "Success"})
+                elif isinstance(content, list) and not content:
+                    msg = msg.model_copy(update={"content": "[]"})
+                elif isinstance(content, str) and not content.strip():
+                    msg = msg.model_copy(update={"content": "Success"})
+            cleaned_messages.append(msg)
+        return handler(request.override(messages=cleaned_messages))
 
 
 class FinancialAgent:
-
     def __init__(self):
-        # self.analyzer = ExpenseAnalyzer()
 
+        DB_URI = "postgresql://neondb_owner:npg_Rv7mDBZd5jwV@ep-soft-base-apz06tg5.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
+        self.checkpointer_cm = (
+            PostgresSaver.from_conn_string(DB_URI)
+        )
+
+        self.checkpointer = (
+            self.checkpointer_cm.__enter__()
+        )
+
+        self.checkpointer.setup()
 
         self.agent = create_agent(
             model=llm,
-            tools=TOOLS
+            tools=TOOLS,
+            checkpointer=self.checkpointer,
+            middleware=[GroqMessageSanitizerMiddleware()],
         )
 
     def chat(
         self,
         user_id: str,
-        question: str
+        question: str,
+        thread_id: str
     ):
 
-        transactions = (
-            get_user_transactions.invoke(
-                {
-                    "user_id": user_id
-                }
-            )
-        )
-
-        analyzer = ExpenseAnalyzer(
-        transactions
-    )
-        budgets = (
-            get_user_budget.invoke(
-                {
-                    "user_id": user_id
-                }
-            )
-        )
-
-        incomes = (
-            get_user_income.invoke(
-                {
-                    "user_id": user_id
-                }
-            )
-        )
-
-        goals = (
-            get_user_goals.invoke(
-                {
-                    "user_id": user_id
-                }
-            )
-        )
-
-        summary = analyzer.summary(
-            # transactions=transactions,
-            # budgets=budgets,
-            # incomes=incomes,
-            # goals=goals
-        )
-
-        prompt = f"""
+        thread_config = {
+            "configurable": {
+                "thread_id": thread_id,
+                "user_id": user_id
+            }
+        }
+        system_prompt = f"""
 You are an expert AI Financial Advisor.
 
-Your job is to help users understand:
-
-- Spending habits
-- Savings
-- Budgets
-- Financial goals
-- Expense categories
-- Financial health
+Current user id: {user_id}
 
 Rules:
-
-1. Use only the provided financial data.
-2. Never invent numbers.
-3. Give practical advice.
-4. Keep responses concise.
-5. Mention risks if overspending is detected.
-
-User Question:
-{question}
-
-Financial Summary:
-{summary}
+- Use tools whenever financial data is required.
+- Never invent financial information.
+- Use transaction, budget, income and goal tools.
+- Give concise actionable advice.
 """
+        
+        
+        response = self.agent.invoke(
+    {
+        "messages": [
+            {
+                "role": "system",
+                "content": system_prompt
+            },
+            {
+                "role": "user",
+                "content": question
+            },
+        ]
 
-        response = llm.invoke(
-            prompt
-        )
+    },
+    config=thread_config
+)
 
-        return response.content
+        return response["messages"][-1].content

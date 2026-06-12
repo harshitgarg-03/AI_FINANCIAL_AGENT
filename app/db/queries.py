@@ -73,7 +73,7 @@ def fetch_user_transactions(user_id: str):
     ORDER BY date DESC
 """)
     # {"userId": user_id}
-
+    print("hiii")
     with engine.connect() as conn:
 
         result = conn.execute(
