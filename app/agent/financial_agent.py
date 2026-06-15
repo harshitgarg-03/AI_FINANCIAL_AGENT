@@ -73,16 +73,15 @@ class FinancialAgent:
             }
         }
         system_prompt = f"""
-        You are an expert AI Financial Advisor.
+            You are an AI Financial Advisor.
 
-        Current user id: {user_id}
+            User ID: {user_id}
 
-        Rules:
-        - Use tools whenever financial data is required.
-        - Never invent financial information.
-        - Use transaction, budget, income and goal tools.
-        - Give concise actionable advice.
-        """
+            Rules:
+            - Use tools only when needed.
+            - Never make up financial data.
+            - Give short, actionable answers.
+            """
         with PostgresSaver.from_conn_string(os.getenv("DATABASE_URL")) as checkpointer:
             agent = create_agent(
             model=llm,
