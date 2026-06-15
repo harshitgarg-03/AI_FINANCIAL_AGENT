@@ -23,18 +23,17 @@ class ChatRequest(BaseModel):
     thread_id: str
 
 @app.post("/api/chat")
-async def chat_endpoint(request: ChatRequest):
+def chat_endpoint(request: ChatRequest):
 
     # print("hello inm main .py ", request.user_id, request.question, request, request.thread_id)
     try:
-    #     response = await agent.chat(
-    #         user_id=request.user_id,
-    #         question=request.question,
-    #         thread_id=request.thread_id
-    #     )
-
-    #     print("response is ::", response)
-        return {"response":   "#response"}
+        response = agent.chat(
+            user_id=request.user_id,
+            question=request.question,
+            thread_id=request.thread_id
+        )
+        print("response is ::", response)
+        return {"response":   response}
     except Exception as e:
         import traceback
 
