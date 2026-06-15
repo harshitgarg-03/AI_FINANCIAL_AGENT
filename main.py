@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 from app.agent.financial_agent import FinancialAgent
+from contextlib import asynccontextmanager
+
 
 app = FastAPI(title="AI Financial Agent API")
 
@@ -21,6 +23,17 @@ class ChatRequest(BaseModel):
     user_id: str
     question: str
     thread_id: str
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global agent
+    agent = FinancialAgent()
+    yield
+    agent.cleanup()  # Add a cleanup() method to FinancialAgent
+
+app = FastAPI(title="AI Financial Agent API", lifespan=lifespan)
+
 
 @app.post("/api/chat")
 def chat_endpoint(request: ChatRequest):

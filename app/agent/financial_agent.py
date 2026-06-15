@@ -1,11 +1,14 @@
 from enum import KEEP
 from app.llm.model import llm
 from app.tools.registry import TOOLS
-
+from psycopg_pool import ConnectionPool
 from langchain.agents import create_agent
 from langgraph.checkpoint.postgres import PostgresSaver 
 from langchain.agents.middleware.types import AgentMiddleware
 from langchain_core.messages import ToolMessage
+import os 
+from dotenv import load_dotenv
+load_dotenv();
 
 from langchain.agents.middleware import SummarizationMiddleware
 
@@ -29,24 +32,23 @@ class GroqMessageSanitizerMiddleware(AgentMiddleware):
 
 
 class FinancialAgent:
+
+    
     def __init__(self):
 
-        DB_URI = "postgresql://neondb_owner:npg_Rv7mDBZd5jwV@ep-soft-base-apz06tg5.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require"
-
-        self.checkpointer_cm = (
-            PostgresSaver.from_conn_string(DB_URI)
+        self.pool = ConnectionPool(
+            conninfo=os.getenv("DATABASE_URL"),
+            max_size=10,
+            kwargs={"autocommit": True}
         )
 
-        self.checkpointer = (
-            self.checkpointer_cm.__enter__()
-        )
-
-        self.checkpointer.setup()
+        with PostgresSaver.from_conn_string(os.getenv("DATABASE_URL")) as checkpointer:
+            checkpointer.setup()
 
         self.agent = create_agent(
             model=llm,
             tools=TOOLS,
-            checkpointer=self.checkpointer,
+            checkpointer=PostgresSaver(self.pool),
             middleware=[GroqMessageSanitizerMiddleware(),
             SummarizationMiddleware(
                 model=llm,
@@ -55,13 +57,14 @@ class FinancialAgent:
                 trim_tokens_to_summarize=1800,
             )]
         )
+    
+    def cleanup(self):
+        if hasattr(self, 'pool'):
+            self.pool.close()
+        elif hasattr(self, 'checkpointer_cm'):
+            self.checkpointer_cm.__exit__(None, None, None)
 
-    def chat(
-        self,
-        user_id: str,
-        question: str,
-        thread_id: str
-    ):
+    def chat(self, user_id: str, question: str, thread_id: str):
 
         thread_config = {
             "configurable": {
@@ -70,33 +73,44 @@ class FinancialAgent:
             }
         }
         system_prompt = f"""
-You are an expert AI Financial Advisor.
+        You are an expert AI Financial Advisor.
 
-Current user id: {user_id}
+        Current user id: {user_id}
 
-Rules:
-- Use tools whenever financial data is required.
-- Never invent financial information.
-- Use transaction, budget, income and goal tools.
-- Give concise actionable advice.
-"""
-        
-        
-        response = self.agent.invoke(
-    {
-        "messages": [
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {
-                "role": "user",
-                "content": question
-            },
-        ]
-
-    },
-    config=thread_config
-)
-
+        Rules:
+        - Use tools whenever financial data is required.
+        - Never invent financial information.
+        - Use transaction, budget, income and goal tools.
+        - Give concise actionable advice.
+        """
+        with PostgresSaver.from_conn_string(os.getenv("DATABASE_URL")) as checkpointer:
+            agent = create_agent(
+            model=llm,
+            tools=TOOLS,
+            checkpointer=checkpointer,
+            middleware=[
+                GroqMessageSanitizerMiddleware(),
+                SummarizationMiddleware(
+                    model=llm,
+                    trigger=("tokens", 3500),
+                    keep=("messages", 6),
+                    trim_tokens_to_summarize=1800,
+                )
+            ]
+        )
+            response = agent.invoke(
+                {
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": system_prompt
+                        },
+                        {
+                            "role": "user",
+                            "content": question
+                        },
+                    ]
+                },
+                config=thread_config
+            )
         return response["messages"][-1].content

@@ -13,3 +13,5 @@ sqlalchemy
 pydantic
 
 python-dotenv
+
+psycopg[pool]
