@@ -7,7 +7,7 @@ load_dotenv();
 groq_api = os.getenv("GROQ_API_KEY")
 
 llm=ChatGroq(
-    model="qwen/qwen3-32b",
+    model="openai/gpt-oss-20b",
     max_completion_tokens=2000
 )
 
