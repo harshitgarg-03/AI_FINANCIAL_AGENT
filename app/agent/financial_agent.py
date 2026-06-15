@@ -1,3 +1,4 @@
+from enum import KEEP
 from app.llm.model import llm
 from app.tools.registry import TOOLS
 
@@ -5,6 +6,8 @@ from langchain.agents import create_agent
 from langgraph.checkpoint.postgres import PostgresSaver 
 from langchain.agents.middleware.types import AgentMiddleware
 from langchain_core.messages import ToolMessage
+
+from langchain.agents.middleware import SummarizationMiddleware
 
 # from app.db.postgres import Checkpointer
 
@@ -44,7 +47,13 @@ class FinancialAgent:
             model=llm,
             tools=TOOLS,
             checkpointer=self.checkpointer,
-            middleware=[GroqMessageSanitizerMiddleware()],
+            middleware=[GroqMessageSanitizerMiddleware(),
+            SummarizationMiddleware(
+                model=llm,
+                trigger=("tokens", 3500),
+                keep=("messages", 6),
+                trim_tokens_to_summarize=1800,
+            )]
         )
 
     def chat(
