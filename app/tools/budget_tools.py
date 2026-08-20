@@ -11,5 +11,4 @@ def get_user_budget(user_id: str):
     """
 
     data =fetch_user_transactions(user_id)
-    print("user budget :: ",data)
     return str(data)

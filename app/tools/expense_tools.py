@@ -16,7 +16,7 @@ def get_user_transactions(
     data = fetch_user_transactions(
         user_id
     )
-    print("user txns  :: ",data)
+    # print("user txns  :: ",data)
     return str(data)
 
 

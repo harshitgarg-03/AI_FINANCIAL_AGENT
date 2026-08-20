@@ -12,5 +12,4 @@ def get_user_income(user_id: str):
     """
 
     data = fetch_user_transactions(user_id)
-    print("user income :: ",data)
     return str(data)
