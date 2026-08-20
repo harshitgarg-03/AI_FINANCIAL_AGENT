@@ -1,18 +1,10 @@
-from langchain_groq import ChatGroq
 import os
-
 from dotenv import load_dotenv
-load_dotenv();
+from langchain_groq import ChatGroq
 
-groq_api = os.getenv("GROQ_API_KEY")
+load_dotenv()
 
-llm=ChatGroq(
+llm = ChatGroq(
     model="llama-3.1-8b-instant",
-    max_completion_tokens=1000
+    max_tokens=1000
 )
-
-# response=llm.invoke(
-#     "hello"
-# )
-# 
-# print(response.content)
