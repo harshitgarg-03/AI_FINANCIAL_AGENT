@@ -11,10 +11,8 @@ load_dotenv();
 
 from langchain.agents.middleware import SummarizationMiddleware
 
-# from app.db.postgres import Checkpointer
 
-
-class GroqMessageSanitizerMiddleware(AgentMiddleware):
+class GroqMessageSanitizerMiddleware(AgentMiddleware): # custom middleware to avoid invlid tool message for model 
     def wrap_model_call(self, request, handler):
         cleaned_messages = []
         for msg in request.messages:
@@ -60,9 +58,7 @@ class FinancialAgent:
     def cleanup(self):
         if hasattr(self, 'pool'):
             self.pool.close()
-        elif hasattr(self, 'checkpointer_cm'):
-            self.checkpointer_cm.__exit__(None, None, None)
-
+        
     def chat(self, user_id: str, question: str, thread_id: str):
 
         thread_config = {
@@ -81,34 +77,20 @@ class FinancialAgent:
             - Never make up financial data.
             - Give short, actionable answers.
             """
-        with PostgresSaver.from_conn_string(os.getenv("DATABASE_URL")) as checkpointer:
-            agent = create_agent(
-            model=llm,
-            tools=TOOLS,
-            checkpointer=checkpointer,
-            middleware=[
-                GroqMessageSanitizerMiddleware(),
-                SummarizationMiddleware(
-                    model=llm,
-                    trigger=("tokens", 3500),
-                    keep=("messages", 6),
-                    trim_tokens_to_summarize=1800,
-                )
-            ]
+        
+        response = self.agent.invoke(
+            {
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": system_prompt
+                    },
+                    {
+                        "role": "user",
+                        "content": question
+                    },
+                ]
+            },
+            config=thread_config
         )
-            response = agent.invoke(
-                {
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": system_prompt
-                        },
-                        {
-                            "role": "user",
-                            "content": question
-                        },
-                    ]
-                },
-                config=thread_config
-            )
         return response["messages"][-1].content
