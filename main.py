@@ -20,7 +20,7 @@ class ChatRequest(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global agent
- 
+  
     agent = FinancialAgent()
 
     yield
