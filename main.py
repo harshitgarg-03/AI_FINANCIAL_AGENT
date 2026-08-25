@@ -8,17 +8,14 @@ import traceback
 from app.agent.financial_agent import FinancialAgent
 
 
-agent = FinancialAgent()
-
-
-class ChatRequest(BaseModel):
+class ChatRequest(BaseModel): # req data validate krta h 
     user_id: str
     question: str
     thread_id: str
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI): # lifecycle manages 
     global agent
   
     agent = FinancialAgent()
