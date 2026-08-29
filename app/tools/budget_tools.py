@@ -10,5 +10,7 @@ def get_user_budget(user_id: str):
     Fetch user budget information.
     """
 
-    data =fetch_user_transactions(user_id)
+    data = fetch_user_transactions(
+                user_id
+            )
     return str(data)
